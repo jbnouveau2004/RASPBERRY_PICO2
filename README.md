@@ -18,9 +18,6 @@ rm -r build/
 cmake -DPICO_BOARD=pico2_w -B build
 ```
 ```
-scp -r stage1/* u110573096@access945105329.webspace-data.io:/kunden/homepages/1/d945105329/htdocs/stage1/
-```
-```
 cmake --build build -j$(nproc)
 ```
 ```
