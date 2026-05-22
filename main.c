@@ -80,7 +80,6 @@ static const unsigned char server_key[] =
 "e92dDr7LBv2D2zmS0yJd8W8=\n"
 "-----END PRIVATE KEY-----\n";
 
-
 float read_adc_voltage(void)
 {
     adc_select_input(ADC_INPUT);
@@ -141,30 +140,36 @@ static err_t https_recv(void *arg, struct altcp_pcb *conn,
     return ERR_OK;
     }
 
-    // Route GPIO
+    // Route toggle vanne 2
     if (strstr(request, "GET /togglevanne2") != NULL) {
 
-        vanne2_state = gpio_get(vanne2_PIN);
         vanne2_state = !vanne2_state;
-
         gpio_put(vanne2_PIN, vanne2_state);
 
-        const char *response =
+        const char *body = vanne2_state ? "1" : "0";
+
+        char response[256];
+        snprintf(response, sizeof(response),
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: %d\r\n"
             "Connection: close\r\n"
             "\r\n"
-            "OK";
+            "%s",
+            (int)strlen(body),
+            body
+        );
 
-    altcp_sent(conn, https_sent);
-    altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
-    altcp_output(conn);
+        altcp_sent(conn, https_sent);
+        altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+        altcp_output(conn);
 
-    pbuf_free(p);
-    return ERR_OK;
+        pbuf_free(p);
+        return ERR_OK;
     }
 
-    // Route GPIO
+    // Route voltage
     if (strstr(request, "GET /voltage") != NULL) {
         float voltage = read_adc_voltage();
 
@@ -192,7 +197,7 @@ static err_t https_recv(void *arg, struct altcp_pcb *conn,
     return ERR_OK;
     }
 
-    //route GPIO
+    // Route PWM
     if (strstr(request, "GET /pwm") != NULL) {
 
         float voltage = 0.0f;
@@ -202,6 +207,7 @@ static err_t https_recv(void *arg, struct altcp_pcb *conn,
             voltage = atof(v + 2);
         }
 
+        // Limitation sécurité
         if (voltage < 0.0f) {
             voltage = 0.0f;
         }
@@ -210,147 +216,109 @@ static err_t https_recv(void *arg, struct altcp_pcb *conn,
             voltage = 3.3f;
         }
 
+        // Conversion tension -> PWM
         uint slice_num = pwm_gpio_to_slice_num(PWM_PIN);
         uint channel = pwm_gpio_to_channel(PWM_PIN);
+
         uint16_t level = (uint16_t)(voltage * 4095.0f / 3.3f);
 
         pwm_set_chan_level(slice_num, channel, level);
 
-        char response[256];
+        // Corps de réponse
+        char body[64];
+        snprintf(body, sizeof(body),
+            "PWM %.2f V",
+            voltage
+        );
 
-        sprintf(response,
+        // Réponse HTTP complète
+        char response[256];
+        snprintf(response, sizeof(response),
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: %d\r\n"
             "Connection: close\r\n"
             "\r\n"
-            "PWM %.2f V",
-            voltage);
-
-    altcp_sent(conn, https_sent);
-    altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
-    altcp_output(conn);
-
-    pbuf_free(p);
-    return ERR_OK;
-    }
-
-    // Page principale
-    else {
-
-        const char *html1 =
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "<!DOCTYPE html>"
-            "<html>"
-            "<head><meta charset='UTF-8'><title>Pico 2 W</title></head>"
-
-            "<style>"
-            ".vert{background-color:green;}"
-            ".rouge{background-color:red;}"
-            ".vert, .rouge{width:50px;height:50px;border-radius:25px 25px;}"
-            "</style>"
-
-            "<body>"
-            "<h1>Bonjour depuis le Pico 2 WH !</h1>"
-            "<p>Vanne1=PB2 / Vanne2=PB4 / Tension(entrée)=PB26 / Tension(sortie)=PB5</p>"
-            "<div id='gpio'>...</div>"
-
-            "<button class='btn'>Vanne 2</button>"
-
-
-            "<div id='voltage'>...</div>"
-
-
-            "<button class='btn1'>0.0v</button>"
-            "<button class='btn2'>0.5v</button>"
-            "<button class='btn3'>1.0v</button>"
-            "<button class='btn4'>1.5v</button>"
-            "<button class='btn5'>2.0v</button>"
-            "<button class='btn6'>2.5v</button>"
-            "<button class='btn7'>3.0v</button>"
-            "<button class='btn8'>3.3v</button>"
-
-            "<input id='input' type='range' min='0' max='3.3' step='0.1' />";
-
-        const char *html2 =
-            "<script>"
-
-
-            "setInterval(async () => {"
-
-            " let r = await fetch('/gpio');"
-            " let t = await r.text();"
-            " if(t=='1'){document.getElementById('gpio').innerHTML = `<div>La vanne 1 est ouverte</div><div class='vert'></div>`;}"
-            " else{document.getElementById('gpio').innerHTML = `<div>La vanne 1 est fermée</div><div class='rouge'></div>`;}"
-"setTimeout(() => {"
-"  console.log(`Retardée d'une seconde.`);"
-"}, '1000');"
-            "        let y = await fetch('/voltage');"
-            "        let z = await y.text();"
-            "        document.getElementById('voltage').innerText = z + ' V';"  
-
-            "}, 2000);"
-            
-            " btn=document.querySelector('.btn');"
-            " btn.addEventListener('click', toggleVanne2);"
-            " async function toggleVanne2() {"
-            " await fetch('/togglevanne2');}"
-
-            " btn=document.querySelector('.btn1');"
-            " btn.addEventListener('click', tension1);"
-            " async function tension1() {"
-            " await fetch('/pwm?v=0.0');}"
-            " btn=document.querySelector('.btn2');"
-            " btn.addEventListener('click', tension2);"
-            " async function tension2() {"
-            " await fetch('/pwm?v=0.5');}"
-            " btn=document.querySelector('.btn3');"
-            " btn.addEventListener('click', tension3);"
-            " async function tension3() {"
-            " await fetch('/pwm?v=1.0');}"
-            " btn=document.querySelector('.btn4');"
-            " btn.addEventListener('click', tension4);"
-            " async function tension4() {"
-            " await fetch('/pwm?v=1.5');}"
-            " btn=document.querySelector('.btn5');"
-            " btn.addEventListener('click', tension5);"
-            " async function tension5() {"
-            " await fetch('/pwm?v=2.0');}"
-            " btn=document.querySelector('.btn6');"
-            " btn.addEventListener('click', tension6);"
-            " async function tension6() {"
-            " await fetch('/pwm?v=2.5');}"
-            " btn=document.querySelector('.btn7');"
-            " btn.addEventListener('click', tension7);"
-            " async function tension7() {"
-            " await fetch('/pwm?v=3.0');}"
-            " btn=document.querySelector('.btn8');"
-            " btn.addEventListener('click', tension8);"
-            " async function tension8() {"
-            " await fetch('/pwm?v=3.3');}"
-
-            "const input = document.querySelector('#input');"
-            "input.addEventListener('input', async (event) => {await fetch('/pwm?v=' + event.target.value);});"
-            
-            "</script>";
-
-        const char *html3 =
-            "</body>"
-            "</html>";
-
+            "%s",
+            (int)strlen(body),
+            body
+        );
 
         altcp_sent(conn, https_sent);
-        altcp_write(conn, html1, strlen(html1), TCP_WRITE_FLAG_COPY);
-        altcp_output(conn);
-        altcp_write(conn, html2, strlen(html2), TCP_WRITE_FLAG_COPY);
-        altcp_output(conn);
-        altcp_write(conn, html3, strlen(html3), TCP_WRITE_FLAG_COPY);
+
+        altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
         altcp_output(conn);
 
         pbuf_free(p);
         return ERR_OK;
+    }
+
+    // Page principale
+    else {
+        const char *body =
+            "<!DOCTYPE html>"
+            "<html>"
+            "<head><meta charset='UTF-8'><title>Pico 2 W</title></head>"
+            "<style>"
+            ".vert{background-color:green;}"
+            ".rouge{background-color:red;}"
+            ".vert,.rouge{width:50px;height:50px;border-radius:25px;}"
+            "</style>"
+            "<body>"
+            "<h1>Bonjour depuis le Pico 2 WH !</h1>"
+            "<p>Vanne1=PB2 / Vanne2=PB4 / Tension(entrée)=PB26 / Tension(sortie)=PB5</p>"
+            "<div id='gpio'>...</div>"
+            "<button class='btn'>Vanne 2</button>"
+            "<div id='voltage'>...</div>"
+            "<input id='input' type='range' min='0' max='3.3' step='0.1' />"
+
+            "<script>"
+            "function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}"
+
+            "setInterval(async()=>{"
+            "let r=await fetch('/gpio');"
+            "let t=await r.text();"
+            "if(t=='1'){document.getElementById('gpio').innerHTML=`<div>La vanne 1 est ouverte</div><div class='vert'></div>`;}"
+            "else{document.getElementById('gpio').innerHTML=`<div>La vanne 1 est fermée</div><div class='rouge'></div>`;}"
+
+            "await sleep(1000);"
+
+            "let y=await fetch('/voltage');"
+            "let z=await y.text();"
+            "document.getElementById('voltage').innerText=z+' V';"
+            "},2000);"
+
+            "const btn=document.querySelector('.btn');"
+            "btn.addEventListener('click',async()=>{await fetch('/togglevanne2');});"
+
+            "const input=document.querySelector('#input');"
+            "input.addEventListener('input',async(event)=>{await fetch('/pwm?v='+event.target.value);});"
+            "</script>"
+            "</body>"
+            "</html>";
+
+        char header[256];
+
+        snprintf(header, sizeof(header),
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: %d\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            (int)strlen(body)
+        );
+
+        altcp_sent(conn, https_sent);
+
+        altcp_write(conn, header, strlen(header), TCP_WRITE_FLAG_COPY);
+        altcp_write(conn, body, strlen(body), TCP_WRITE_FLAG_COPY);
+        altcp_output(conn);
+
+        pbuf_free(p);
+        return ERR_OK;
+
     }
 }
 

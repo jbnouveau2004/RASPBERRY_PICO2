@@ -51,11 +51,11 @@
 
 
 // augmentation de la mémoire (est-ce necessaire?)
-#define MEM_SIZE (64 * 1024)
-#define MEMP_NUM_TCP_PCB 8
-#define MEMP_NUM_TCP_SEG 32
-#define TCP_SND_BUF (8 * TCP_MSS)
-#define TCP_WND (8 * TCP_MSS)
+#define MEM_SIZE (48 * 1024)
+#define MEMP_NUM_TCP_PCB 6
+#define MEMP_NUM_TCP_SEG 16
+#define TCP_SND_BUF (4 * TCP_MSS)
+#define TCP_WND (4 * TCP_MSS)
 
 
 #endif
