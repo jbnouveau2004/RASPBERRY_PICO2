@@ -7,7 +7,9 @@ Projet 1:
 --------------------
 
 entrées/sorties numériques et analogiques
+
 Vanne1=PB2 / Vanne2=PB4 / Tension(entrée)=PB26 / Tension(sortie)=PB5
+
 Une page HTML/CSS/JS
 
 
@@ -24,16 +26,13 @@ cmake --build build -j$(nproc)
 cp build/server.uf2 /media/jb/RP2350/
 ```
 
-Le dossier back:
-
-Les entrées/sortie de base
-/gpio_es/
-HTTPS/TLS de base (version debug)
-/https_tls/
-HTTPS/TLS de base (version terminée)
-/https_tls_simplifié/https_tls/
-HTTPS/TLS de base (version simplifiée)
-/https_tls_ultrasimplifié/https_tls/
+Le dossier back (anciens codes dans lequel je me suis basé):
+<table border="1">
+<tr><td>/gpio_es/</td><td>Les entrées/sortie de base</td></tr>
+<tr><td>/https_tls/</td><td>HTTPS/TLS de base (version debug)</td></tr>
+<tr><td>/https_tls_simplifié/https_tls/</td><td>HTTPS/TLS de base (version terminée)</td></tr>
+<tr><td>/https_tls_ultrasimplifié/https_tls/</td><td>HTTPS/TLS de base (version simplifiée)</td></tr>
+</table>
 
 Le développement:
 ```
@@ -50,7 +49,8 @@ awk '{print "\"" $0 "\\n\""}' server.key
 ```
 
 
-les débugs se font:
+les débugs https/tls se font:
+
 /root/pico/pico-sdk/src/rp2_common/pico_lwip/altcp_tls_mbedtls.c
 
 les tests se font:
