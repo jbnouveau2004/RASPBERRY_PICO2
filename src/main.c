@@ -24,6 +24,10 @@ int main()
         return -1;
     }
 
+    if (http_server_start() != 0) {
+        return -1;
+    }
+
     if (https_server_start() != 0) {
         return -1;
     }

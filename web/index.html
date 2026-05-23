@@ -3,23 +3,9 @@
 
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="style.css">
+<script src="script.js" defer></script>
 <title>Pico 2 W</title>
-
-<style>
-.vert{
-    background-color:green;
-}
-
-.rouge{
-    background-color:red;
-}
-
-.vert,.rouge{
-    width:50px;
-    height:50px;
-    border-radius:25px;
-}
-</style>
 
 </head>
 
@@ -34,43 +20,6 @@
 <div id="voltage">...</div>
 
 <input id="input" type="range" min="0" max="3.3" step="0.1" />
-
-<script>
-
-setInterval(async()=>{
-
-    let r=await fetch('/gpio');
-    let t=await r.text();
-
-    if(t=='1'){
-        document.getElementById('gpio').innerHTML =
-        `<div>La vanne 1 est ouverte</div><div class='vert'></div>`;
-    }
-    else{
-        document.getElementById('gpio').innerHTML =
-        `<div>La vanne 1 est fermée</div><div class='rouge'></div>`;
-    }
-
-    let y=await fetch('/voltage');
-    let z=await y.text();
-
-    document.getElementById('voltage').innerText = z + ' V';
-
-},2000);
-
-const btn=document.querySelector('.btn');
-
-btn.addEventListener('click', async()=>{
-    await fetch('/togglevanne2');
-});
-
-const input=document.querySelector('#input');
-
-input.addEventListener('input', async(event)=>{
-    await fetch('/pwm?v=' + event.target.value);
-});
-
-</script>
 
 </body>
 </html>

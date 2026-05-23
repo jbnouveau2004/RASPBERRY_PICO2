@@ -7,7 +7,9 @@
 #include "hardware/pwm.h"
 
 #include "routes.h"
-#include "../web/index_html.h"
+#include "index_html.h"
+#include "style_css.h"
+#include "script_js.h"
 
 #define BUTTON_PIN 3
 #define LED_PIN 2
@@ -34,7 +36,7 @@ static err_t https_sent(void *arg, struct altcp_pcb *conn, u16_t len)
     return ERR_OK;
 }
 
-
+// ****** API sur port 443 *****
 err_t https_recv(void *arg, struct altcp_pcb *conn,
                         struct pbuf *p, err_t err)
 {
@@ -64,6 +66,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: text/plain\r\n"
         "Cache-Control: no-cache\r\n"
+        "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
         "Content-Length: %d\r\n"
         "Connection: close\r\n"
         "\r\n"
@@ -93,6 +96,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
             "Cache-Control: no-cache\r\n"
+            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
             "Content-Length: %d\r\n"
             "Connection: close\r\n"
             "\r\n"
@@ -122,6 +126,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: text/plain\r\n"
                 "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
                 "Connection: close\r\n"
                 "Content-Length: %d\r\n"
                 "\r\n"
@@ -177,6 +182,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: text/plain\r\n"
             "Cache-Control: no-cache\r\n"
+            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
             "Content-Length: %d\r\n"
             "Connection: close\r\n"
             "\r\n"
@@ -194,31 +200,126 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
         return ERR_OK;
     }
 
-    // Page principale
-    else {
-        const unsigned char *body = index_html;
-        int body_len = index_html_len;
+}
+
+// ***** Page principale sur port 80 *****
+err_t http_recv(void *arg,
+                    struct altcp_pcb *conn,
+                    struct pbuf *p,
+                    err_t err)
+{
+    if (!p) {
+        altcp_close(conn);
+        return ERR_OK;
+    }
+
+    char request[512];
+
+    int len = p->tot_len;
+
+    if (len > 511)
+        len = 511;
+
+    pbuf_copy_partial(p, request, len, 0);
+
+    request[len] = '\0';
+
+    // CSS
+    if (strstr(request, "GET /style.css") != NULL) {
 
         char header[256];
-        
+
         snprintf(header, sizeof(header),
             "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html\r\n"
+            "Content-Type: text/css\r\n"
             "Content-Length: %d\r\n"
             "Connection: close\r\n"
             "\r\n",
-            body_len
+            style_css_len
         );
 
         altcp_sent(conn, https_sent);
 
         altcp_write(conn, header, strlen(header), TCP_WRITE_FLAG_COPY);
-        altcp_write(conn, body, body_len, TCP_WRITE_FLAG_COPY);
+
+        altcp_write(conn,
+                    style_css,
+                    style_css_len,
+                    TCP_WRITE_FLAG_COPY);
 
         altcp_output(conn);
 
         pbuf_free(p);
-        return ERR_OK;
 
+        return ERR_OK;
     }
+    // JS
+    if (strstr(request, "GET /script.js") != NULL) {
+
+        char header[256];
+
+        snprintf(header, sizeof(header),
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: application/javascript\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: %d\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            script_js_len
+        );
+
+        altcp_sent(conn, https_sent);
+
+        altcp_write(conn,
+                    header,
+                    strlen(header),
+                    TCP_WRITE_FLAG_COPY);
+
+        altcp_write(conn,
+                    script_js,
+                    script_js_len,
+                    TCP_WRITE_FLAG_COPY);
+
+        altcp_output(conn);
+
+        pbuf_free(p);
+
+        return ERR_OK;
+    }
+    // HTML
+    if (strstr(request, "GET / ") != NULL ||
+        strstr(request, "GET /HTTP") != NULL ||
+        strstr(request, "GET / HTTP") != NULL) {
+
+        char header[256];
+
+        snprintf(header, sizeof(header),
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Cache-Control: no-cache\r\n"
+            "Content-Length: %d\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            index_html_len
+        );
+
+        altcp_sent(conn, https_sent);
+
+        altcp_write(conn,
+                    header,
+                    strlen(header),
+                    TCP_WRITE_FLAG_COPY);
+
+        altcp_write(conn,
+                    index_html,
+                    index_html_len,
+                    TCP_WRITE_FLAG_COPY);
+
+        altcp_output(conn);
+
+        pbuf_free(p);
+
+        return ERR_OK;
+    }
+
 }

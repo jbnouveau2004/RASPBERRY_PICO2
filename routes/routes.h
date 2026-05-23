@@ -9,4 +9,9 @@ err_t https_recv(void *arg,
                  struct pbuf *p,
                  err_t err);
 
+err_t http_recv(void *arg,
+                struct altcp_pcb *conn,
+                struct pbuf *p,
+                err_t err);
+
 #endif

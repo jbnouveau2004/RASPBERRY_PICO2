@@ -10,6 +10,50 @@
 #include "../routes/routes.h"
 #include "../tls/certs.h"
 
+// ***** Serveur HTTP seulement pour pages web (couche abstraite du serveur HTTPS/TLS) *****
+static err_t http_accept(void *arg,
+                         struct altcp_pcb *conn,
+                         err_t err)
+{
+    altcp_recv(conn, http_recv);
+
+    return ERR_OK;
+}
+
+int http_server_start(void)
+{
+    struct altcp_pcb *http_pcb =
+        altcp_new_ip_type(NULL, IPADDR_TYPE_ANY);
+
+    if (!http_pcb) {
+        printf("Erreur HTTP PCB\n");
+        return -1;
+    }
+
+    err_t e = altcp_bind(http_pcb,
+                         IP_ANY_TYPE,
+                         80);
+
+    if (e != ERR_OK) {
+        printf("Erreur bind HTTP: %d\n", e);
+        return -1;
+    }
+
+    http_pcb = altcp_listen(http_pcb);
+
+    if (!http_pcb) {
+        printf("Erreur listen HTTP\n");
+        return -1;
+    }
+
+    altcp_accept(http_pcb, http_accept);
+
+    printf("Serveur HTTP actif\n");
+
+    return 0;
+}
+
+// ***** Serveur HTTPS/TLS pour les API *****
 static err_t https_accept(void *arg, struct altcp_pcb *conn, err_t err)
 {
     altcp_recv(conn, https_recv);

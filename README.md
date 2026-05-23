@@ -10,7 +10,9 @@ entrées/sorties numériques et analogiques
 
 Vanne1=PB2 / Vanne2=PB4 / Tension(entrée)=PB26 / Tension(sortie)=PB5
 
-Une page HTML/CSS/JS
+Une page HTML/CSS/JS séparée charger sur port 80
+
+APIs sur port 443
 
 
 ```
@@ -61,4 +63,7 @@ curl -vk https://192.168.1.208/
 le déploiement:
 ```
 xxd -i index.html > index_html.h
+xxd -i style.css > style_css.h
+xxd -i script.js > script_js.h
 ```
+si changement IP, bien vérifier dans route.c en plus du wifi.c, car problèmes CORS qui doivent être réglé (confrontation entre un protocole sécurisé et non sécurisé)
