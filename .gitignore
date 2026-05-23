@@ -1,7 +1,7 @@
 ###> A supprimer ###
 /build/
-/gpio_es/build/
-/https_tls/build/
-/https_tls_simplifié/https_tls/build/
-/https_tls_ultrasimplifié/https_tls/build/
+/back/gpio_es/build/
+/back/https_tls/build/
+/back/https_tls_simplifié/https_tls/build/
+/back/https_tls_ultrasimplifié/https_tls/build/
 ###< A supprimer ###

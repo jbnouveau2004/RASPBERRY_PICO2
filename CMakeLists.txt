@@ -9,7 +9,11 @@ project(pico_http_server C CXX ASM)
 pico_sdk_init()
 
 add_executable(server
-    main.c
+    src/main.c
+    routes/routes.c
+    wifi/wifi.c
+    hardware/hardware.c
+    server/server.c
 )
 
 target_link_libraries(server
@@ -27,5 +31,11 @@ pico_enable_stdio_uart(server 0)
 pico_add_extra_outputs(server)
 
 target_include_directories(server PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/src
+    ${CMAKE_CURRENT_LIST_DIR}/routes
+    ${CMAKE_CURRENT_LIST_DIR}/web
+    ${CMAKE_CURRENT_LIST_DIR}/tls
+    ${CMAKE_CURRENT_LIST_DIR}/wifi
+    ${CMAKE_CURRENT_LIST_DIR}/hardware
+    ${CMAKE_CURRENT_LIST_DIR}/server
 )

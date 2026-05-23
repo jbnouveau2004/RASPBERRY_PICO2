@@ -24,7 +24,7 @@ cmake --build build -j$(nproc)
 cp build/server.uf2 /media/jb/RP2350/
 ```
 
-Les dossiers:
+Le dossier back:
 
 Les entrées/sortie de base
 /gpio_es/
@@ -56,4 +56,9 @@ les débugs se font:
 les tests se font:
 ```
 curl -vk https://192.168.1.208/
+```
+
+le déploiement:
+```
+xxd -i index.html > index_html.h
 ```
