@@ -58,4 +58,29 @@
 #define TCP_WND (4 * TCP_MSS)
 
 
+/**
+#define MEM_SIZE (128 * 1024)
+
+#define MEMP_NUM_TCP_PCB 8
+#define MEMP_NUM_TCP_SEG 32
+
+#define TCP_SND_BUF (8 * TCP_MSS)
+#define TCP_WND     (8 * TCP_MSS)
+*/
+
+/**
+
+MEM_SIZE : mémoire globale lwIP. Si trop petit, reset/saturation.
+
+MEMP_NUM_TCP_PCB : nombre de connexions TCP possibles. Avec HTTP + HTTPS + Chrome, 6 peut être juste.
+
+MEMP_NUM_TCP_SEG : nombre de segments TCP en attente. 16 peut être trop bas pour fichiers JS/CSS + fetch.
+
+TCP_SND_BUF : buffer d’envoi. Très important pour envoyer script.js.
+
+TCP_WND : fenêtre de réception. Moins critique que TCP_SND_BUF, mais tu peux l’augmenter aussi.
+
+*/
+
+
 #endif

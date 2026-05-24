@@ -7,9 +7,9 @@
 #include "hardware/pwm.h"
 
 #include "routes.h"
-#include "index_html.h"
-#include "style_css.h"
-#include "script_js.h"
+#include "../web/index_html.h"
+#include "../web/style_css.h"
+#include "../web/script_min_js.h"
 
 #define BUTTON_PIN 3
 #define LED_PIN 2
@@ -273,7 +273,7 @@ err_t http_recv(void *arg,
             "Content-Length: %d\r\n"
             "Connection: close\r\n"
             "\r\n",
-            script_js_len
+            script_min_js_len
         );
 
         altcp_sent(conn, http_sent);
@@ -284,8 +284,8 @@ err_t http_recv(void *arg,
                     TCP_WRITE_FLAG_COPY);
 
         altcp_write(conn,
-                    script_js,
-                    script_js_len,
+                    script_min_js,
+                    script_min_js_len,
                     TCP_WRITE_FLAG_COPY);
 
         altcp_output(conn);
