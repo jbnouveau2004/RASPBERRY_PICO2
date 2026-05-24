@@ -1,42 +1,29 @@
+let busy = false;
+
 async function updateValues() {
-    try {
-        let r = await fetch('https://192.168.1.20/gpio', { cache: 'no-store' });
+    busy = true;
+
+    let r = await fetch('https://192.168.1.20/gpio', { cache: 'no-store' });
         let t = await r.text();
-        console.log("GPIO =", t);
 
         if (t == '1') {
-
             document.getElementById('gpio').innerHTML =
-            `<div>La vanne 1 est ouverte</div>
-             <div class='vert'></div>`;
-
+            `<div>La vanne 1 est ouverte</div><div class='vert'></div>`;
         } else {
-
             document.getElementById('gpio').innerHTML =
-            `<div>La vanne 1 est fermée</div>
-             <div class='rouge'></div>`;
+            `<div>La vanne 1 est fermée</div><div class='rouge'></div>`;
         }
 
-    } catch (e) {
-        console.log("Erreur GPIO:", e);
-    }
-
-    try {
         let y = await fetch('https://192.168.1.20/voltage', { cache: 'no-store' });
         let z = await y.text();
-        console.log("Voltage =", z);
-        let z = await y.text();
-
         document.getElementById('voltage').innerText =
         z + ' V';
 
-    } catch (e) {
-        console.log("Erreur voltage:", e);
-    }
-
+    busy = false;  
 }
 
-setInterval(updateValues, 10000);
+updateValues();
+setInterval("if(!busy){updateValues();}", 1000);
 
 
 const btn=document.querySelector('.btn');

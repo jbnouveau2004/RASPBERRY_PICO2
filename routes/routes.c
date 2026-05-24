@@ -30,13 +30,14 @@ float read_adc_voltage(void)
     return voltage;
 }
 
+
+// ****** API sur port 443 *****
 static err_t https_sent(void *arg, struct altcp_pcb *conn, u16_t len)
 {
-    altcp_close(conn);
+    altcp_close(conn); // attend la fin des données avant de fermer
     return ERR_OK;
 }
 
-// ****** API sur port 443 *****
 err_t https_recv(void *arg, struct altcp_pcb *conn,
                         struct pbuf *p, err_t err)
 {
@@ -202,7 +203,14 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
 
 }
 
+
 // ***** Page principale sur port 80 *****
+static err_t http_sent(void *arg, struct altcp_pcb *conn, u16_t len)
+{
+    altcp_close(conn); // attend la fin des données avant de fermer
+    return ERR_OK;
+}
+
 err_t http_recv(void *arg,
                     struct altcp_pcb *conn,
                     struct pbuf *p,
@@ -238,7 +246,7 @@ err_t http_recv(void *arg,
             style_css_len
         );
 
-        altcp_sent(conn, https_sent);
+        altcp_sent(conn, http_sent);
 
         altcp_write(conn, header, strlen(header), TCP_WRITE_FLAG_COPY);
 
@@ -268,7 +276,7 @@ err_t http_recv(void *arg,
             script_js_len
         );
 
-        altcp_sent(conn, https_sent);
+        altcp_sent(conn, http_sent);
 
         altcp_write(conn,
                     header,
@@ -303,7 +311,7 @@ err_t http_recv(void *arg,
             index_html_len
         );
 
-        altcp_sent(conn, https_sent);
+        altcp_sent(conn, http_sent);
 
         altcp_write(conn,
                     header,
