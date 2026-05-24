@@ -68,3 +68,7 @@ terser script.js -c -m -o script.min.js
 xxd -i script.min.js > script_min_js.h
 ```
 si changement IP, bien vérifier dans route.c en plus du wifi.c, car problèmes CORS qui doivent être réglé (confrontation entre un protocole sécurisé et non sécurisé)
+
+
+Projet 2: 
+--------------------

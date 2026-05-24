@@ -11,6 +11,8 @@
 #include "../web/style_css.h"
 #include "../web/script_min_js.h"
 
+#define API_TOKEN "2755"
+
 #define BUTTON_PIN 3
 #define LED_PIN 2
 
@@ -57,54 +59,160 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
     // Route GPIO
     if (strstr(request, "GET /gpio") != NULL) {
 
-    int state = gpio_get(BUTTON_PIN);
+        if (strstr(request, "token=" API_TOKEN) == NULL) {
+            const char *body = "Forbidden";
 
-    char body[8];
-    snprintf(body, sizeof(body), "%d", state);
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 403 Forbidden\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
 
-    char response[256];
-    snprintf(response, sizeof(response),
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Cache-Control: no-cache\r\n"
-        "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
-        "Content-Length: %d\r\n"
-        "Connection: close\r\n"
-        "\r\n"
-        "%s",
-        (int)strlen(body),
-        body
-    );
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+            pbuf_free(p);
+            return ERR_OK;
 
-    altcp_sent(conn, https_sent);
-    altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
-    altcp_output(conn);
+        }else{
 
-    pbuf_free(p);
-    return ERR_OK;
+            int state = gpio_get(BUTTON_PIN);
+
+            char body[8];
+            snprintf(body, sizeof(body), "%d", state);
+
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
+
+            altcp_sent(conn, https_sent);
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+
+            pbuf_free(p);
+            return ERR_OK;
+
+        }
     }
 
     // Route toggle vanne 2
     if (strstr(request, "GET /togglevanne2") != NULL) {
 
-        vanne2_state = !vanne2_state;
-        gpio_put(vanne2_PIN, vanne2_state);
+        if (strstr(request, "token=" API_TOKEN) == NULL) {
+            const char *body = "Forbidden";
 
-        const char *body = vanne2_state ? "1" : "0";
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 403 Forbidden\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
 
-        char response[256];
-        snprintf(response, sizeof(response),
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/plain\r\n"
-            "Cache-Control: no-cache\r\n"
-            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
-            "Content-Length: %d\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "%s",
-            (int)strlen(body),
-            body
-        );
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+            pbuf_free(p);
+            return ERR_OK;
+
+        }else{
+
+            vanne2_state = !vanne2_state;
+            gpio_put(vanne2_PIN, vanne2_state);
+
+            const char *body = vanne2_state ? "1" : "0";
+
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
+
+            altcp_sent(conn, https_sent);
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+
+            pbuf_free(p);
+            return ERR_OK;
+
+        }
+    }
+
+    // Route voltage
+    if (strstr(request, "GET /voltage") != NULL) {
+
+        if (strstr(request, "token=" API_TOKEN) == NULL) {
+            const char *body = "Forbidden";
+
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 403 Forbidden\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
+
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+            pbuf_free(p);
+            return ERR_OK;
+
+        }else{
+
+            float voltage = read_adc_voltage();
+
+            char body[64];
+            sprintf(body, "%.2f", voltage);
+
+            char response[256];
+
+            sprintf(response,
+                    "HTTP/1.1 200 OK\r\n"
+                    "Content-Type: text/plain\r\n"
+                    "Cache-Control: no-cache\r\n"
+                    "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                    "Connection: close\r\n"
+                    "Content-Length: %d\r\n"
+                    "\r\n"
+                    "%s",
+                    (int)strlen(body),
+                    body);
 
         altcp_sent(conn, https_sent);
         altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
@@ -112,130 +220,153 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
 
         pbuf_free(p);
         return ERR_OK;
-    }
 
-    // Route voltage
-    if (strstr(request, "GET /voltage") != NULL) {
-        float voltage = read_adc_voltage();
-
-        char body[64];
-        sprintf(body, "%.2f", voltage);
-
-        char response[256];
-
-        sprintf(response,
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/plain\r\n"
-                "Cache-Control: no-cache\r\n"
-                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
-                "Connection: close\r\n"
-                "Content-Length: %d\r\n"
-                "\r\n"
-                "%s",
-                (int)strlen(body),
-                body);
-
-    altcp_sent(conn, https_sent);
-    altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
-    altcp_output(conn);
-
-    pbuf_free(p);
-    return ERR_OK;
+        }
     }
 
     // Route PWM
     if (strstr(request, "GET /pwm") != NULL) {
 
-        float voltage = 0.0f;
+        if (strstr(request, "token=" API_TOKEN) == NULL) {
+            const char *body = "Forbidden";
 
-        char *v = strstr(request, "v=");
-        if (v != NULL) {
-            voltage = atof(v + 2);
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 403 Forbidden\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
+
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+            pbuf_free(p);
+            return ERR_OK;
+
+        }else{
+
+            float voltage = 0.0f;
+
+            char *v = strstr(request, "v=");
+            if (v != NULL) {
+                voltage = atof(v + 2);
+            }
+
+            // Limitation sécurité
+            if (voltage < 0.0f) {
+                voltage = 0.0f;
+            }
+
+            if (voltage > 3.3f) {
+                voltage = 3.3f;
+            }
+
+            // Conversion tension -> PWM
+            uint slice_num = pwm_gpio_to_slice_num(PWM_PIN);
+            uint channel = pwm_gpio_to_channel(PWM_PIN);
+
+            uint16_t level = (uint16_t)(voltage * 4095.0f / 3.3f);
+
+            pwm_set_chan_level(slice_num, channel, level);
+
+            // Corps de réponse
+            char body[64];
+            snprintf(body, sizeof(body),
+                "PWM %.2f V",
+                voltage
+            );
+
+            // Réponse HTTP complète
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
+
+            altcp_sent(conn, https_sent);
+
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+
+            pbuf_free(p);
+            return ERR_OK;
         }
-
-        // Limitation sécurité
-        if (voltage < 0.0f) {
-            voltage = 0.0f;
-        }
-
-        if (voltage > 3.3f) {
-            voltage = 3.3f;
-        }
-
-        // Conversion tension -> PWM
-        uint slice_num = pwm_gpio_to_slice_num(PWM_PIN);
-        uint channel = pwm_gpio_to_channel(PWM_PIN);
-
-        uint16_t level = (uint16_t)(voltage * 4095.0f / 3.3f);
-
-        pwm_set_chan_level(slice_num, channel, level);
-
-        // Corps de réponse
-        char body[64];
-        snprintf(body, sizeof(body),
-            "PWM %.2f V",
-            voltage
-        );
-
-        // Réponse HTTP complète
-        char response[256];
-        snprintf(response, sizeof(response),
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/plain\r\n"
-            "Cache-Control: no-cache\r\n"
-            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
-            "Content-Length: %d\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "%s",
-            (int)strlen(body),
-            body
-        );
-
-        altcp_sent(conn, https_sent);
-
-        altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
-        altcp_output(conn);
-
-        pbuf_free(p);
-        return ERR_OK;
     }
 
     // Route STATUS
-    if (strstr(request, "GET /status ") != NULL) {
+    if (strstr(request, "GET /status") != NULL) {
 
-        int state = gpio_get(BUTTON_PIN);
-        float voltage = read_adc_voltage();
+        if (strstr(request, "token=" API_TOKEN) == NULL) {
+            const char *body = "Forbidden";
 
-        char body[128];
+            char response[256];
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 403 Forbidden\r\n"
+                "Content-Type: text/plain\r\n"
+                "Cache-Control: no-cache\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
 
-        snprintf(body, sizeof(body),
-            "{\"gpio\":%d,\"voltage\":%.2f}",
-            state,
-            voltage
-        );
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+            pbuf_free(p);
+            return ERR_OK;
 
-        char response[256];
+        }else{
 
-        snprintf(response, sizeof(response),
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: application/json\r\n"
-            "Cache-Control: no-store\r\n"
-            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
-            "Content-Length: %d\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "%s",
-            (int)strlen(body),
-            body
-        );
+            int state = gpio_get(BUTTON_PIN);
+            float voltage = read_adc_voltage();
 
-        altcp_sent(conn, https_sent);
-        altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
-        altcp_output(conn);
+            char body[128];
 
-        pbuf_free(p);
-        return ERR_OK;
+            snprintf(body, sizeof(body),
+                "{\"gpio\":%d,\"voltage\":%.2f}",
+                state,
+                voltage
+            );
+
+            char response[256];
+
+            snprintf(response, sizeof(response),
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/json\r\n"
+                "Cache-Control: no-store\r\n"
+                "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+                "Content-Length: %d\r\n"
+                "Connection: close\r\n"
+                "\r\n"
+                "%s",
+                (int)strlen(body),
+                body
+            );
+
+            altcp_sent(conn, https_sent);
+            altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+            altcp_output(conn);
+
+            pbuf_free(p);
+            return ERR_OK;
+        }
     }
 
 }

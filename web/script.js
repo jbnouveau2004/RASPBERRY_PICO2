@@ -1,12 +1,14 @@
 let busy = false;
 
+const TOKEN = "2755";
+
 async function updateValues() {
     if (busy) return;
 
     busy = true;
 
     try {
-        let r = await fetch('https://192.168.1.20/status', {
+        let r = await fetch('https://192.168.1.20/status?token=' + TOKEN, {
             cache: 'no-store'
         });
 
@@ -41,7 +43,7 @@ const btn = document.querySelector('.btn');
 
 btn.addEventListener('click', async () => {
     try {
-        await fetch('https://192.168.1.20/togglevanne2', {
+        await fetch('https://192.168.1.20/togglevanne2?token=' + TOKEN, {
             cache: 'no-store'
         });
 
@@ -56,7 +58,7 @@ const input = document.querySelector('#input');
 
 input.addEventListener('change', async (event) => {
     try {
-        await fetch('https://192.168.1.20/pwm?v=' + event.target.value, {
+        await fetch('https://192.168.1.20/pwm?v=' + event.target.value + '&token=' + TOKEN, {
             cache: 'no-store'
         });
 
