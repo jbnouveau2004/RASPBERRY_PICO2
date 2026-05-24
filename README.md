@@ -14,6 +14,8 @@ Une page HTML/CSS/JS séparée charger sur port 80
 
 APIs sur port 443
 
+Protégé par mot de passe
+
 
 ```
 rm -r build/

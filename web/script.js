@@ -1,6 +1,6 @@
 let busy = false;
 
-const TOKEN = "2755";
+const TOKEN = prompt("Veuillez entrer le mot de passe pour pouvoir communiquer avec les APIs");
 
 async function updateValues() {
     if (busy) return;
