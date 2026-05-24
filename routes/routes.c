@@ -43,7 +43,6 @@ static err_t https_sent(void *arg, struct altcp_pcb *conn, u16_t len)
 err_t https_recv(void *arg, struct altcp_pcb *conn,
                         struct pbuf *p, err_t err)
 {
-
     if (!p) {
         altcp_close(conn);
         return ERR_OK;
@@ -56,10 +55,29 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
     pbuf_copy_partial(p, request, len, 0);
     request[len] = '\0';
 
-    // Route GPIO
-    if (strstr(request, "GET /gpio") != NULL) {
+    // Gestion CORS pour faire des requêtes https à partir du site http
+    if (strstr(request, "OPTIONS ") != NULL) {
+        const char *response =
+            "HTTP/1.1 204 No Content\r\n"
+            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+            "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+            "Access-Control-Allow-Headers: Authorization, Content-Type, X-PWM\r\n"
+            "Access-Control-Max-Age: 600\r\n"
+            "Content-Length: 0\r\n"
+            "Connection: close\r\n"
+            "\r\n";
 
-        if (strstr(request, "token=" API_TOKEN) == NULL) {
+        altcp_sent(conn, https_sent);
+        altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+        altcp_output(conn);
+        pbuf_free(p);
+        return ERR_OK;
+    }
+
+    // Route GPIO
+    if (strstr(request, "POST /gpio") != NULL) {
+
+        if (strstr(request, "Authorization: Bearer " API_TOKEN) == NULL) {
             const char *body = "Forbidden";
 
             char response[256];
@@ -76,6 +94,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
                 body
             );
 
+            altcp_sent(conn, https_sent);
             altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
             altcp_output(conn);
             pbuf_free(p);
@@ -113,9 +132,9 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
     }
 
     // Route toggle vanne 2
-    if (strstr(request, "GET /togglevanne2") != NULL) {
+    if (strstr(request, "POST /togglevanne2") != NULL) {
 
-        if (strstr(request, "token=" API_TOKEN) == NULL) {
+        if (strstr(request, "Authorization: Bearer " API_TOKEN) == NULL) {
             const char *body = "Forbidden";
 
             char response[256];
@@ -132,6 +151,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
                 body
             );
 
+            altcp_sent(conn, https_sent);
             altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
             altcp_output(conn);
             pbuf_free(p);
@@ -169,9 +189,9 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
     }
 
     // Route voltage
-    if (strstr(request, "GET /voltage") != NULL) {
+    if (strstr(request, "POST /voltage") != NULL) {
 
-        if (strstr(request, "token=" API_TOKEN) == NULL) {
+        if (strstr(request, "Authorization: Bearer " API_TOKEN) == NULL) {
             const char *body = "Forbidden";
 
             char response[256];
@@ -188,6 +208,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
                 body
             );
 
+            altcp_sent(conn, https_sent);
             altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
             altcp_output(conn);
             pbuf_free(p);
@@ -225,9 +246,9 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
     }
 
     // Route PWM
-    if (strstr(request, "GET /pwm") != NULL) {
+    if (strstr(request, "POST /pwm") != NULL) {
 
-        if (strstr(request, "token=" API_TOKEN) == NULL) {
+        if (strstr(request, "Authorization: Bearer " API_TOKEN) == NULL) {
             const char *body = "Forbidden";
 
             char response[256];
@@ -244,6 +265,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
                 body
             );
 
+            altcp_sent(conn, https_sent);
             altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
             altcp_output(conn);
             pbuf_free(p);
@@ -253,9 +275,9 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
 
             float voltage = 0.0f;
 
-            char *v = strstr(request, "v=");
+            char *v = strstr(request, "X-PWM: ");
             if (v != NULL) {
-                voltage = atof(v + 2);
+                voltage = atof(v + 7); // 7 caractères ("X-PWM: ")
             }
 
             // Limitation sécurité
@@ -308,9 +330,9 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
     }
 
     // Route STATUS
-    if (strstr(request, "GET /status") != NULL) {
+    if (strstr(request, "POST /status") != NULL) {
 
-        if (strstr(request, "token=" API_TOKEN) == NULL) {
+        if (strstr(request, "Authorization: Bearer " API_TOKEN) == NULL) {
             const char *body = "Forbidden";
 
             char response[256];
@@ -327,6 +349,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
                 body
             );
 
+            altcp_sent(conn, https_sent);
             altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
             altcp_output(conn);
             pbuf_free(p);

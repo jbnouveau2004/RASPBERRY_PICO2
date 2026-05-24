@@ -8,8 +8,11 @@ async function updateValues() {
     busy = true;
 
     try {
-        let r = await fetch('https://192.168.1.20/status?token=' + TOKEN, {
-            cache: 'no-store'
+
+        let r = await fetch('https://192.168.1.20/status', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: {'Authorization': 'Bearer ' + TOKEN}
         });
 
         let data = await r.json();
@@ -43,12 +46,11 @@ const btn = document.querySelector('.btn');
 
 btn.addEventListener('click', async () => {
     try {
-        await fetch('https://192.168.1.20/togglevanne2?token=' + TOKEN, {
-            cache: 'no-store'
+        await fetch('https://192.168.1.20/togglevanne2', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: {'Authorization': 'Bearer ' + TOKEN}
         });
-
-        updateValues();
-
     } catch (e) {
         console.log("Erreur button:", e.message);
     }
@@ -58,10 +60,14 @@ const input = document.querySelector('#input');
 
 input.addEventListener('change', async (event) => {
     try {
-        await fetch('https://192.168.1.20/pwm?v=' + event.target.value + '&token=' + TOKEN, {
-            cache: 'no-store'
+        await fetch('https://192.168.1.20/pwm', {
+            method: 'POST',
+            cache: 'no-store',
+            headers: {
+                'Authorization': 'Bearer ' + TOKEN,
+                'X-PWM': event.target.value
+            }
         });
-
     } catch (e) {
         console.log("Erreur PWM:", e.message);
     }
