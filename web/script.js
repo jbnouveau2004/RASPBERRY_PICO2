@@ -6,10 +6,13 @@ async function updateValues() {
     busy = true;
 
     try {
-        let r = await fetch('https://192.168.1.20/gpio', { cache: 'no-store' });
-        let t = await r.text();
+        let r = await fetch('https://192.168.1.20/status', {
+            cache: 'no-store'
+        });
 
-        if (t == '1') {
+        let data = await r.json();
+
+        if (data.gpio == 1) {
             document.getElementById('gpio').innerHTML =
                 `<div>La vanne 1 est ouverte</div><div class='vert'></div>`;
         } else {
@@ -17,10 +20,8 @@ async function updateValues() {
                 `<div>La vanne 1 est fermée</div><div class='rouge'></div>`;
         }
 
-        let y = await fetch('https://192.168.1.20/voltage', { cache: 'no-store' });
-        let z = await y.text();
-
-        document.getElementById('voltage').innerText = z + ' V';
+        document.getElementById('voltage').innerText =
+            data.voltage + ' V';
 
     } catch (e) {
         console.log("Erreur updateValues:", e.message);
@@ -31,27 +32,34 @@ async function updateValues() {
 }
 
 updateValues();
+
 setInterval(() => {
     updateValues();
-}, 3000);
+}, 5000);
 
-const btn=document.querySelector('.btn');
-btn.addEventListener('click', async() => {
+const btn = document.querySelector('.btn');
+
+btn.addEventListener('click', async () => {
     try {
         await fetch('https://192.168.1.20/togglevanne2', {
             cache: 'no-store'
         });
+
+        updateValues();
+
     } catch (e) {
         console.log("Erreur button:", e.message);
     }
 });
 
+const input = document.querySelector('#input');
 
-input.addEventListener('input', async(event) => {
+input.addEventListener('change', async (event) => {
     try {
         await fetch('https://192.168.1.20/pwm?v=' + event.target.value, {
             cache: 'no-store'
         });
+
     } catch (e) {
         console.log("Erreur PWM:", e.message);
     }

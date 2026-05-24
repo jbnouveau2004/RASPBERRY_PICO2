@@ -201,6 +201,43 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
         return ERR_OK;
     }
 
+    // Route STATUS
+    if (strstr(request, "GET /status ") != NULL) {
+
+        int state = gpio_get(BUTTON_PIN);
+        float voltage = read_adc_voltage();
+
+        char body[128];
+
+        snprintf(body, sizeof(body),
+            "{\"gpio\":%d,\"voltage\":%.2f}",
+            state,
+            voltage
+        );
+
+        char response[256];
+
+        snprintf(response, sizeof(response),
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: application/json\r\n"
+            "Cache-Control: no-store\r\n"
+            "Access-Control-Allow-Origin: http://192.168.1.20\r\n"
+            "Content-Length: %d\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            "%s",
+            (int)strlen(body),
+            body
+        );
+
+        altcp_sent(conn, https_sent);
+        altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
+        altcp_output(conn);
+
+        pbuf_free(p);
+        return ERR_OK;
+    }
+
 }
 
 
