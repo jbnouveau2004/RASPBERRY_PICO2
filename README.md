@@ -74,3 +74,10 @@ si changement IP, bien vérifier dans route.c en plus du wifi.c, car problèmes 
 
 Projet 2: 
 --------------------
+
+Route (méthode POST):
+https://192.168.1.20/gpio
+https://192.168.1.20/voltage
+https://192.168.1.20/tooglevanne2
+https://192.168.1.20/pwm?v=
+https://192.168.1.20/status
