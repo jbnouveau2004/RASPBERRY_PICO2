@@ -30,7 +30,7 @@ cmake --build build -j$(nproc)
 cp build/server.uf2 /media/jb/RP2350/
 ```
 
-Le dossier back (anciens codes dans lequel je me suis basé):
+Le dossier back (anciens codes dans lesquels je me suis basé):
 <table border="1">
 <tr><td>/gpio_es/</td><td>Les entrées/sortie de base</td></tr>
 <tr><td>/https_tls/</td><td>HTTPS/TLS de base (version debug)</td></tr>
@@ -76,8 +76,13 @@ Projet 2:
 --------------------
 
 Route (méthode POST):
+```
 https://192.168.1.20/gpio
+```
 https://192.168.1.20/voltage
+```
 https://192.168.1.20/tooglevanne2
+```
 https://192.168.1.20/pwm?v=
+```
 https://192.168.1.20/status
