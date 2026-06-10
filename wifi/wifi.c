@@ -57,3 +57,86 @@ int wifi_connect(void)
 
     return 0;
 }
+
+void reconnect_wifi(void)
+{
+    printf("Reconnexion WiFi...\n");
+
+    cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+    sleep_ms(1000);
+
+    int ret = cyw43_arch_wifi_connect_timeout_ms(
+        WIFI_SSID,
+        WIFI_PASSWORD,
+        CYW43_AUTH_WPA2_AES_PSK,
+        30000
+    );
+
+    printf("Résultat reconnexion = %d\n", ret);
+}
+
+void wifi_reconnect_if_needed(void)
+{
+    int status = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+
+    printf("status = %d\n", status);
+    printf("UP=%d JOIN=%d NOIP=%d DOWN=%d\n",
+       CYW43_LINK_UP,
+       CYW43_LINK_JOIN,
+       CYW43_LINK_NOIP,
+       CYW43_LINK_DOWN);
+
+    switch (status) {
+    case CYW43_LINK_UP:
+        printf("WiFi OK\n");
+        break;
+
+    case CYW43_LINK_DOWN:
+        printf("WiFi DOWN\n");
+        break;
+
+    case CYW43_LINK_JOIN:
+        printf("WiFi JOIN\n");
+        break;
+
+    case CYW43_LINK_NOIP:
+        printf("WiFi connecté mais pas d'IP\n");
+        break;
+
+    case CYW43_LINK_FAIL:
+        printf("WiFi FAIL\n");
+        break;
+
+    case CYW43_LINK_NONET:
+        printf("WiFi réseau introuvable\n");
+        break;
+
+    case CYW43_LINK_BADAUTH:
+        printf("WiFi mauvais mot de passe\n");
+        break;
+
+    default:
+        printf("Statut WiFi inconnu: %d\n", status);
+        break;
+}
+
+    if (status == CYW43_LINK_DOWN) {
+        printf("WiFi perdu, tentative de reconnexion...\n");
+
+        cyw43_wifi_leave(&cyw43_state, CYW43_ITF_STA);
+        sleep_ms(1000);
+
+        int ret = cyw43_arch_wifi_connect_timeout_ms(
+            WIFI_SSID,
+            WIFI_PASSWORD,
+            CYW43_AUTH_WPA2_AES_PSK,
+            30000
+        );
+
+        if (ret == 0) {
+            printf("WiFi reconnecté\n");
+        } else {
+            printf("Échec reconnexion WiFi: %d\n", ret);
+        }
+    }
+}

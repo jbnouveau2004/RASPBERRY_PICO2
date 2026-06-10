@@ -6,6 +6,8 @@
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
 
+#include "lwip/tcp.h"
+
 #include "routes.h"
 #include "../web/index_html.h"
 #include "../web/style_css.h"
@@ -24,6 +26,24 @@ bool vanne2_state = false;
 
 #define PWM_PIN 5
 
+// libérer les ressources côté TLS/LWIP
+static void close_client(struct altcp_pcb *conn)
+{
+    if (!conn) return;
+
+    altcp_arg(conn, NULL);
+    altcp_recv(conn, NULL);
+    altcp_err(conn, NULL);
+
+    err_t err = altcp_close(conn);
+    altcp_close(conn);
+
+    if (err != ERR_OK) {
+        altcp_abort(conn);
+    }
+}
+
+
 float read_adc_voltage(void)
 {
     adc_select_input(ADC_INPUT);
@@ -36,7 +56,8 @@ float read_adc_voltage(void)
 // ****** API sur port 443 *****
 static err_t https_sent(void *arg, struct altcp_pcb *conn, u16_t len)
 {
-    altcp_close(conn); // attend la fin des données avant de fermer
+//    altcp_close(conn); // attend la fin des données avant de fermer
+    close_client(conn);
     return ERR_OK;
 }
 
@@ -276,7 +297,7 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
             voltage
         );
 
-        char response[256];
+        char response[512];
 
         snprintf(response, sizeof(response),
             "HTTP/1.1 200 OK\r\n"
@@ -295,7 +316,10 @@ err_t https_recv(void *arg, struct altcp_pcb *conn,
         altcp_write(conn, response, strlen(response), TCP_WRITE_FLAG_COPY);
         altcp_output(conn);
 
+        altcp_recved(conn, p->tot_len);
         pbuf_free(p);
+        tcp_close(conn);
+
         return ERR_OK;
     }
 

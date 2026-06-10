@@ -62,6 +62,23 @@ les tests se font:
 curl -vk https://192.168.1.208/
 ```
 
+Quelques abréviations très courantes dans LWIP et le SDK Pico :
+Abréviation	Signification
+err	    error
+ret	    return value
+arg	    argument
+len	    length
+buf	    buffer
+conn    connection
+pcb	    Protocol Control Block
+cfg	    configuration
+addr	address
+pkt	    packet
+msg	    message
+cb	    callback
+ctx	    context
+dev	    device
+
 le déploiement:
 ```
 xxd -i index.html > index_html.h
